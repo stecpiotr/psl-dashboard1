@@ -7,25 +7,12 @@ st.set_page_config(page_title="PSL – Dashboard popularności słów", layout="
 
 st.markdown("""
     <style>
-    .block-container {
-        padding-top: 60px !important;
-        overflow: visible !important;
-    }
-    @media (max-width: 700px) {
-        .block-container {
-            padding-top: 102px !important;   /* więcej luzu pod belką Streamlit */
-        }
-    }
-    @media (max-width: 500px) {
-        .block-container {
-            padding-top: 80px !important;
-        }
-    }
+    .block-container { padding-top: 70px !important; }
     .psl-logo-title-row {
         display: flex;
         align-items: center;
         gap: 32px;
-        margin-bottom: 0.5em;
+        margin-bottom: 0.2em;
         flex-wrap: wrap;
     }
     .psl-logo-img {
@@ -35,32 +22,6 @@ st.markdown("""
         object-fit: contain;
         display: block;
         margin-right: 4px;
-    }
-    @media (max-width: 700px) {
-        .psl-logo-title-row {
-            flex-direction: column !important;
-            align-items: flex-start !important;
-            gap: 0 !important;
-        }
-        .psl-logo-img {
-            height: 38px !important;
-            max-width: 80vw !important;
-            width: auto !important;
-            margin-bottom: 15px;
-        }
-        .psl-title {
-            font-size: 1.28rem !important;
-            line-height: 1.13 !important;
-        }
-    }
-    @media (max-width: 420px) {
-        .psl-logo-img {
-            height: 24px !important;
-            max-width: 64vw !important;
-        }
-        .psl-title {
-            font-size: 0.98rem !important;
-        }
     }
     .psl-title {
         font-size: 2.7rem;
@@ -80,7 +41,8 @@ st.markdown("""
         line-height: 1.35;
         font-weight: 500;
     }
-    /* Tabela ... (reszta bez zmian) */
+
+    /* Tabela */
     .dynamic-psl-table { width: 100%; border-collapse: collapse; font-size: 0.91em; }
     .dynamic-psl-table th { background-color: #fafafa; text-align: center; }
     .dynamic-psl-table td, .dynamic-psl-table th {
@@ -115,6 +77,46 @@ st.markdown("""
         padding-right: 3px !important;
     }
     .stDownloadButton { margin-top: 12px; }
+
+    /* MOBILE STYLES */
+    @media (max-width: 700px) {
+        .psl-logo-title-row {
+            flex-direction: column !important;
+            align-items: flex-start !important;
+            gap: 0 !important;
+        }
+        .psl-logo-img {
+            height: 40px !important;
+            max-width: 80vw !important;
+            width: auto !important;
+            margin-bottom: 10px;
+            margin-right: 0;
+        }
+        .psl-title {
+            font-size: 2.15rem !important;       /* Większy tytuł na mobile */
+            line-height: 1.18 !important;
+            margin-bottom: 0.13em !important;
+        }
+        .psl-subtitle {
+            font-size: 0.96rem !important;       /* Mniejszy podtytuł na mobile */
+            line-height: 1.14 !important;
+            margin-bottom: 1.2em !important;
+        }
+    }
+    @media (max-width: 440px) {
+        .psl-logo-img {
+            height: 28px !important;
+            max-width: 70vw !important;
+        }
+        .psl-title {
+            font-size: 1.2rem !important;
+            margin-bottom: 0.1em !important;
+        }
+        .psl-subtitle {
+            font-size: 0.80rem !important;       /* Jeszcze mniejszy na najmniejszych */
+            line-height: 1.08 !important;
+        }
+    }
     </style>
 """, unsafe_allow_html=True)
 

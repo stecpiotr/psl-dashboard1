@@ -5,18 +5,63 @@ import io
 
 st.set_page_config(page_title="PSL – Dashboard popularności słów", layout="wide")
 
-# ---- CSS Z UKŁADEM MOBILNYM LOGO+TYTUŁ ----
 st.markdown("""
     <style>
-    .block-container { padding-top: 30px !important; }
+    .block-container {
+        padding-top: 60px !important;
+        overflow: visible !important;
+    }
+    @media (max-width: 700px) {
+        .block-container {
+            padding-top: 102px !important;   /* więcej luzu pod belką Streamlit */
+        }
+    }
+    @media (max-width: 500px) {
+        .block-container {
+            padding-top: 80px !important;
+        }
+    }
     .psl-logo-title-row {
         display: flex;
         align-items: center;
         gap: 32px;
-        margin-bottom: 0.2em;
+        margin-bottom: 0.5em;
         flex-wrap: wrap;
     }
-    .psl-logo-img { height: 56px !important; }
+    .psl-logo-img {
+        height: 56px;
+        width: auto;
+        max-width: 140px;
+        object-fit: contain;
+        display: block;
+        margin-right: 4px;
+    }
+    @media (max-width: 700px) {
+        .psl-logo-title-row {
+            flex-direction: column !important;
+            align-items: flex-start !important;
+            gap: 0 !important;
+        }
+        .psl-logo-img {
+            height: 38px !important;
+            max-width: 80vw !important;
+            width: auto !important;
+            margin-bottom: 15px;
+        }
+        .psl-title {
+            font-size: 1.28rem !important;
+            line-height: 1.13 !important;
+        }
+    }
+    @media (max-width: 420px) {
+        .psl-logo-img {
+            height: 24px !important;
+            max-width: 64vw !important;
+        }
+        .psl-title {
+            font-size: 0.98rem !important;
+        }
+    }
     .psl-title {
         font-size: 2.7rem;
         font-weight: 800;
@@ -24,24 +69,7 @@ st.markdown("""
         margin-bottom: 0.08em;
         font-family: 'Montserrat', 'Segoe UI', 'Arial', sans-serif;
         line-height: 2;
-    }
-    @media (max-width: 600px) {
-        .psl-logo-title-row {
-            flex-direction: column !important;
-            align-items: flex-start !important;
-            gap: 8px !important;
-            margin-bottom: 0.45em;
-        }
-        .psl-logo-img {
-            margin-bottom: 2px !important;
-            height: 46px !important;
-        }
-        .psl-title {
-            font-size: 2.0rem !important;
-            line-height: 1.35 !important;
-            margin-top: 0 !important;
-            margin-bottom: 0 !important;
-        }
+        word-break: break-word;
     }
     .psl-subtitle {
         font-size: 1.22rem;
@@ -52,7 +80,7 @@ st.markdown("""
         line-height: 1.35;
         font-weight: 500;
     }
-    /* Tabela */
+    /* Tabela ... (reszta bez zmian) */
     .dynamic-psl-table { width: 100%; border-collapse: collapse; font-size: 0.91em; }
     .dynamic-psl-table th { background-color: #fafafa; text-align: center; }
     .dynamic-psl-table td, .dynamic-psl-table th {
@@ -90,7 +118,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# ----------- LOGO + TYTUŁ ---------
+# ----------- LOGO + TYTUŁ -----------
 st.markdown(
     """
     <div class="psl-logo-title-row">
@@ -306,6 +334,7 @@ fig.update_layout(
 )
 
 # ----------- UKŁAD 2 KOLUMN (WYKRES + TABELA) -----------
+
 col1, col2 = st.columns([2, 1])
 
 with col1:

@@ -5,6 +5,7 @@ import io
 
 st.set_page_config(page_title="PSL – Dashboard popularności słów", layout="wide")
 
+# ---- CSS Z UKŁADEM MOBILNYM LOGO+TYTUŁ ----
 st.markdown("""
     <style>
     .block-container { padding-top: 30px !important; }
@@ -13,6 +14,7 @@ st.markdown("""
         align-items: center;
         gap: 32px;
         margin-bottom: 0.2em;
+        flex-wrap: wrap;
     }
     .psl-logo-img { height: 56px !important; }
     .psl-title {
@@ -22,6 +24,24 @@ st.markdown("""
         margin-bottom: 0.08em;
         font-family: 'Montserrat', 'Segoe UI', 'Arial', sans-serif;
         line-height: 2;
+    }
+    @media (max-width: 600px) {
+        .psl-logo-title-row {
+            flex-direction: column !important;
+            align-items: flex-start !important;
+            gap: 8px !important;
+            margin-bottom: 0.45em;
+        }
+        .psl-logo-img {
+            margin-bottom: 2px !important;
+            height: 46px !important;
+        }
+        .psl-title {
+            font-size: 2.0rem !important;
+            line-height: 1.35 !important;
+            margin-top: 0 !important;
+            margin-bottom: 0 !important;
+        }
     }
     .psl-subtitle {
         font-size: 1.22rem;
@@ -42,12 +62,12 @@ st.markdown("""
     .dynamic-psl-table td.center { text-align: center !important; }
     .dynamic-psl-table td.bold { font-weight: bold; }
     .dynamic-psl-table td.lp-col, .dynamic-psl-table th.lp-col {
-    width: 18px !important;
-    min-width: 14px !important;
-    max-width: 22px !important;
-    text-align: center !important;
-    padding-left: 1px !important;
-    padding-right: 1px !important;
+        width: 18px !important;
+        min-width: 14px !important;
+        max-width: 22px !important;
+        text-align: center !important;
+        padding-left: 1px !important;
+        padding-right: 1px !important;
     }
     .dynamic-psl-table td.slowo-col, .dynamic-psl-table th.slowo-col {
         width: 66px !important;
@@ -286,7 +306,6 @@ fig.update_layout(
 )
 
 # ----------- UKŁAD 2 KOLUMN (WYKRES + TABELA) -----------
-
 col1, col2 = st.columns([2, 1])
 
 with col1:

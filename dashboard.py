@@ -1,11 +1,101 @@
 import streamlit as st
 import pandas as pd
-import matplotlib.pyplot as plt
+import plotly.graph_objs as go
+import io
 
-st.set_page_config(page_title="Dashboard tagów", layout="wide")
+st.set_page_config(page_title="PSL – Dashboard popularności słów", layout="wide")
 
-# Dane wejściowe
-dane = """
+st.markdown("""
+    <style>
+    .block-container { padding-top: 30px !important; }
+    .psl-logo-title-row {
+        display: flex;
+        align-items: center;
+        gap: 32px;
+        margin-bottom: 0.2em;
+    }
+    .psl-logo-img { height: 56px !important; }
+    .psl-title {
+        font-size: 2.7rem;
+        font-weight: 800;
+        letter-spacing: -2px;
+        margin-bottom: 0.08em;
+        font-family: 'Montserrat', 'Segoe UI', 'Arial', sans-serif;
+        line-height: 2;
+    }
+    .psl-subtitle {
+        font-size: 1.22rem;
+        color: #444;
+        margin-top: 0.3em;
+        margin-bottom: 1.5em;
+        font-family: 'Montserrat', 'Segoe UI', 'Arial', sans-serif;
+        line-height: 1.35;
+        font-weight: 500;
+    }
+    /* Tabela */
+    .dynamic-psl-table { width: 100%; border-collapse: collapse; font-size: 0.91em; }
+    .dynamic-psl-table th { background-color: #fafafa; text-align: center; }
+    .dynamic-psl-table td, .dynamic-psl-table th {
+        padding: 4px 6px 4px 6px !important;
+    }
+    .dynamic-psl-table tr.highlight-row { background-color: #ffe1ba !important; }
+    .dynamic-psl-table td.center { text-align: center !important; }
+    .dynamic-psl-table td.bold { font-weight: bold; }
+    .dynamic-psl-table td.lp-col, .dynamic-psl-table th.lp-col {
+    width: 18px !important;
+    min-width: 14px !important;
+    max-width: 22px !important;
+    text-align: center !important;
+    padding-left: 1px !important;
+    padding-right: 1px !important;
+    }
+    .dynamic-psl-table td.slowo-col, .dynamic-psl-table th.slowo-col {
+        width: 66px !important;
+        min-width: 36px !important;
+        max-width: 90px !important;
+        text-align: left !important;
+        padding-left: 6px !important;
+        padding-right: 6px !important;
+    }
+    .dynamic-psl-table td.liczba-col, .dynamic-psl-table th.liczba-col,
+    .dynamic-psl-table td.proc-col, .dynamic-psl-table th.proc-col {
+        width: 44px !important;
+        min-width: 28px !important;
+        max-width: 55px !important;
+        text-align: center !important;
+        padding-left: 3px !important;
+        padding-right: 3px !important;
+    }
+    .stDownloadButton { margin-top: 12px; }
+    </style>
+""", unsafe_allow_html=True)
+
+# ----------- LOGO + TYTUŁ ---------
+st.markdown(
+    """
+    <div class="psl-logo-title-row">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/1/12/Polnische_Bauernpartei_%28PSL%29_Logo.svg/509px-Polnische_Bauernpartei_%28PSL%29_Logo.svg.png"
+             class="psl-logo-img" alt="Logo PSL"/>
+        <span class="psl-title">
+            <span style='color:#18b46e'>PSL</span> – dashboard popularności <span style='color:#ff6c25'>słów</span>
+        </span>
+    </div>
+    """,
+    unsafe_allow_html=True
+)
+st.markdown(
+    """
+    <div class="psl-subtitle" style="font-size:1.12rem;">
+        Dashboard popularności tagów w odpowiedzi na otwarte pytanie<br>
+        <span style="color:#666;font-style:italic;font-weight:400">
+        "Jakimi konkretnymi projektami powinien zająć się PSL w ramach rządu, aby przyczyniło się to do rozwoju Polski?"
+        </span>
+    </div>
+    """, unsafe_allow_html=True
+)
+
+# ----------- DANE WEJŚCIOWE -----------
+tags_data = """
 podatek 237
 rozwój 222
 polski 200
@@ -108,62 +198,148 @@ zmniejszyć 39
 kobieta 39
 """
 
-# Przetwarzanie danych
-lines = [l.strip().split() for l in dane.strip().split('\n')]
-df = pd.DataFrame(lines, columns=['Tag', 'Count'])
-df['Count'] = df['Count'].astype(int)
-df = df.sort_values('Count', ascending=False).reset_index(drop=True)
-df['% udział'] = (df['Count'] / df['Count'].sum() * 100).round(1)
+# ----------- PRZETWARZANIE DANYCH -----------
+lines = [l.strip().split() for l in tags_data.strip().split('\n')]
+tags_df = pd.DataFrame(lines, columns=['Tag', 'Count'])
+tags_df['Count'] = tags_df['Count'].astype(int)
+tags_df = tags_df.sort_values('Count', ascending=False).reset_index(drop=True)
+tags_df['% udział'] = (tags_df['Count'] / tags_df['Count'].sum() * 100).round(1)
 
-# Sidebar
-st.sidebar.header("Ustawienia dashboardu")
-max_tags = min(len(df), 100)
-top_n = st.sidebar.slider(
-    "Liczba tagów na wykresie (Top N):",
-    min_value=5,
-    max_value=max_tags,
-    value=min(20, max_tags)
-)
+# ----------- SIDEBAR -----------
+st.sidebar.header("Filtry")
+max_tags = min(len(tags_df), 100)
+top_n = st.sidebar.slider("Liczba najczęstszych słów (TOP N):", min_value=5, max_value=max_tags, value=min(20, max_tags))
 highlight = st.sidebar.multiselect(
-    "Które tagi wyróżnić innym kolorem?",
-    options=df['Tag'].tolist(),
-    default=["rolnictwo", "zdrowie"]
+    "Wyróżnij słowa (kolor pomarańczowy):",
+    options=tags_df['Tag'].tolist(),
+    default=["rolnictwo", "podatek"]
 )
 st.sidebar.markdown("---")
 st.sidebar.download_button(
     label="Pobierz dane (CSV)",
-    data=df.to_csv(index=False).encode('utf-8'),
+    data=tags_df.to_csv(index=False).encode('utf-8'),
     file_name="tags_popularity.csv",
     mime='text/csv'
 )
 
-# Główna część
-st.title("📊 Dashboard popularności tagów w odpowiedzi na otwarte pytanie ''Jakimi konkretnymi projektami powinien zająć się PSL w ramach rządu, aby przyczyniło się to do rozwoju Polski?''")
-st.caption("Wizualizacja oraz szybka analiza częstości występowania wyrazów-kluczy w dokumentach/projektach. Wykres pozwala szybko wyłapać trendy, potencjalne priorytety oraz punkty zapalne (wyróżnione innym kolorem).")
+# ----------- WYKRES PLOTLY -----------
+top_tags_df = tags_df.head(top_n).copy()
+labels = [f"{c} / {p}%" for c, p in zip(top_tags_df['Count'], top_tags_df['% udział'])]
+bar_colors = [
+    "#ff9a36" if tag in highlight else "#18b46e"
+    for tag in top_tags_df['Tag']
+]
 
-col1, col2 = st.columns([2,1])
+fig = go.Figure()
+fig.add_trace(go.Bar(
+    x=top_tags_df['Count'][::-1],
+    y=top_tags_df['Tag'][::-1],
+    orientation='h',
+    marker=dict(
+        color=bar_colors[::-1],
+        line=dict(width=0),
+    ),
+    text=labels[::-1],
+    textposition='inside',
+    insidetextanchor='middle',
+    hovertemplate="<b>%{y}</b><br>Liczba: %{x}<br>Udział: %{text}<extra></extra>",
+    width=0.7,
+    opacity=0.93
+))
+
+# --- Ustaw ticki główne co 50, delikatną siatkę co 25 ---
+fig.update_xaxes(
+    tickvals=list(range(0, int(top_tags_df['Count'].max())+51, 50)),
+    ticklen=13,
+    showline=True,
+    linecolor="#cfcfcf",
+    linewidth=1.2,
+    showgrid=True,
+    gridcolor="#f1f1f1",
+    gridwidth=1,
+    dtick=25,   # grid co 25
+    ticks="outside",
+    side="top",
+    tickfont=dict(size=14, color="#aaaaaa"),
+    zeroline=False
+)
+fig.update_yaxes(
+    showgrid=False,
+    tickfont=dict(size=16, color="#111"),
+    ticks="outside",
+    ticklen=8,
+    showline=True,
+    linecolor="#cfcfcf",
+    linewidth=1.2,
+    automargin=True
+)
+
+fig.update_layout(
+    bargap=0.14,
+    plot_bgcolor="rgba(0,0,0,0)",
+    paper_bgcolor="rgba(0,0,0,0)",
+    font=dict(family="Montserrat,Segoe UI,sans-serif", size=15),
+    height=top_n*32 + 110,
+    margin=dict(l=18, r=28, t=80, b=10),
+    showlegend=False,
+    xaxis_title="Liczba wystąpień"
+)
+
+# ----------- UKŁAD 2 KOLUMN (WYKRES + TABELA) -----------
+
+col1, col2 = st.columns([2, 1])
 
 with col1:
-    # Przygotuj dane do wykresu
-    top = df.head(top_n)
-    fig, ax = plt.subplots(figsize=(10, top_n * 0.35 + 1))
-    colors = ['#d74a5a' if tag in highlight else '#24ae5f' for tag in top['Tag']]
-    bars = ax.barh(top['Tag'], top['Count'], color=colors)
-    for i, (cnt, perc) in enumerate(zip(top['Count'], top['% udział'])):
-        ax.text(cnt + 2, i, f"{cnt} / {perc}%", va='center', fontsize=10)
-    ax.invert_yaxis()
-    ax.set_xlabel("Liczba wystąpień")
-    ax.set_ylabel("")
-    ax.set_title(f"Top {top_n} tagów wg liczby wystąpień")
-    ax.spines['right'].set_visible(False)
-    ax.spines['top'].set_visible(False)
-    plt.tight_layout()
-    st.pyplot(fig)
+    st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
 
 with col2:
-    st.markdown("**Tabela danych (Top N):**")
-    st.dataframe(top[['Tag', 'Count', '% udział']].rename(columns={'Tag': 'Tag', 'Count': 'Liczba', '% udział': '%'}), use_container_width=True)
-    st.markdown("> **Tip:** Przeciągnij kolumny lub skopiuj dane bezpośrednio z tabeli do Excela!")
+    table_df = top_tags_df[['Tag', 'Count', '% udział']].rename(
+        columns={'Tag': 'Słowo', 'Count': 'Liczba', '% udział': '%'}
+    ).copy()
+    table_df.insert(0, "L.p.", range(1, len(table_df) + 1))
+    table_df = table_df.sort_values('Liczba', ascending=False).reset_index(drop=True)
+    table_df['%'] = table_df['%'].map(lambda x: '{:.1f}'.format(float(x)).replace(",", "."))
 
-st.markdown("---")
-st.write("**Wskazówki**: Możesz dowolnie zmieniać liczbę wyświetlanych tagów oraz wyróżniać je kolorystycznie, aby lepiej zobaczyć obszary wymagające uwagi lub szczególnie istotne dla strategii. Dane możesz też pobrać do dalszej analizy (np. scoring, dashboardy PowerBI, raportowanie zarządcze).")
+    def make_html_table(df, highlight_tags):
+        html = '<table class="dynamic-psl-table">'
+        html += "<tr>"
+        html += f'<th class="lp-col">L.p.</th>'
+        html += f'<th class="slowo-col">Słowo</th>'
+        html += f'<th class="liczba-col">Liczba</th>'
+        html += f'<th class="proc-col">%</th>'
+        html += "</tr>"
+        for _, row in df.iterrows():
+            is_highlight = str(row['Słowo']) in highlight_tags
+            row_class = "highlight-row" if is_highlight else ""
+            html += f'<tr class="{row_class}">'
+            html += f'<td class="center lp-col">{row["L.p."]}</td>'
+            html += f'<td class="bold slowo-col">{row["Słowo"]}</td>'
+            html += f'<td class="center liczba-col">{row["Liczba"]}</td>'
+            html += f'<td class="center proc-col">{row["%"]}</td>'
+            html += '</tr>'
+        html += '</table>'
+        return html
+
+    excel_buffer = io.BytesIO()
+    with pd.ExcelWriter(excel_buffer, engine='xlsxwriter') as writer:
+        table_df.to_excel(writer, sheet_name="Dane", index=False)
+    excel_buffer.seek(0)
+    excel_data = excel_buffer.getvalue()
+
+    st.markdown(
+        "<div style='margin-bottom: 0.65em; margin-down:0.5em; font-size:1.15rem; font-weight:600'>⬇️ Zobacz dane tabelaryczne (Top N)</div>",
+        unsafe_allow_html=True)
+    st.markdown(make_html_table(table_df, highlight), unsafe_allow_html=True)
+    st.download_button(
+        label="📥 Pobierz jako Excel (.xlsx)",
+        data=excel_data,
+        file_name="tags_popularity.xlsx",
+        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
+
+st.markdown(
+    "<div style='margin-top:3.5em; font-size:1.05rem; color:#18b46e; font-weight:500;'>"
+    "Wizualizacja do strategicznych analiz, prezentacji zarządczych i budowania przewagi PSL.<br>"
+    "<span style='color:#ff6c25'>Zaprojektowano przez: Piotr Stec, Badania.pro®.</span></div>",
+    unsafe_allow_html=True
+)
